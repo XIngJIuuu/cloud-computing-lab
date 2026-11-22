@@ -1,5 +1,7 @@
 """云服务器（ECS）费用估算小工具。"""
 
+import sys
+
 # 按小时计费的规格单价（元/小时），数据仅作演示
 ECS_PRICES = {
     "1c2g": 0.09,
@@ -10,6 +12,7 @@ ECS_PRICES = {
 DISK_PRICE = 0.0004  # 云盘 元/GB/小时
 DISK_GB = 40  # 默认系统盘大小
 HOURS_PER_MONTH = 730  # 平均每月小时数
+YEARLY_DISCOUNT = 0.85  # 包年 85 折
 
 
 def monthly_cost(spec: str) -> float:
@@ -18,10 +21,20 @@ def monthly_cost(spec: str) -> float:
     return round(compute + disk, 2)
 
 
+def yearly_cost(spec: str, count: int) -> float:
+    return round(monthly_cost(spec) * 12 * YEARLY_DISCOUNT * count, 2)
+
+
 def main() -> None:
-    print(f"系统盘按 {DISK_GB}GB 估算")
+    count = int(sys.argv[1]) if len(sys.argv) > 1 else 1
+    if count < 1:
+        sys.exit("台数至少为 1")
+    print(f"系统盘按 {DISK_GB}GB 估算，共 {count} 台")
     for spec in ECS_PRICES:
-        print(f"{spec}\t包月 {monthly_cost(spec):.2f} 元")
+        print(
+            f"{spec}\t包月 {monthly_cost(spec):.2f} 元"
+            f"\t包年 {yearly_cost(spec, count):.2f} 元"
+        )
 
 
 if __name__ == "__main__":
